@@ -1,0 +1,266 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "hour": 9
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": [
+            "Label_404369999337271072"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3d6d2bcf-65c0-45a1-887e-a4c3b9b17563",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wIwoLR7JmP15jcuU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{$json[\"prompt\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        500,
+        260
+      ],
+      "id": "c395ce30-df21-4e2c-82ed-dd22c8a3f78f",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "RHbit8IQHTZIDF03",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format Email Data for OpenAI Summarization\n// This node should come AFTER your email parser and BEFORE OpenAI\n\nconst items = $input.all();\n\nconsole.log(`Formatting ${items.length} emails for OpenAI summarization`);\n\n// Extract the actual email data\nconst emails = items.map(item => item.json);\n\n// Get current date\nconst today = new Date().toLocaleDateString('en-US', { \n  weekday: 'long', \n  year: 'numeric', \n  month: 'long', \n  day: 'numeric' \n});\n\nconsole.log(`Processing emails for date: ${today}`);\n\n// Sort emails by content score (highest first)\nconst sortedEmails = emails\n  .filter(email => email.content && email.content.length > 10) // Only emails with real content\n  .sort((a, b) => b.metadata.contentScore - a.metadata.contentScore);\n\nconsole.log(`Filtered to ${sortedEmails.length} emails with substantial content`);\n\n// Format each email for the prompt\nconst emailList = sortedEmails.map((email, index) => {\n  return `EMAIL ${index + 1}:\nSubject: ${email.subject}\nFrom: ${email.from.name} (${email.from.domain})\nDate: ${email.date}\nContent Score: ${email.metadata.contentScore}\nContent: ${email.content}\n\n---`;\n}).join('\\n');\n\n// Create the complete prompt with anti-hallucination safeguards\nconst prompt = `You are creating an AI newsletter digest. You must ONLY use the information provided below. Do NOT make up any information, dates, or events not explicitly mentioned in these emails.\n\nTODAY'S DATE: ${today}\n\nEMAIL DATA TO SUMMARIZE:\n${emailList}\n\nSTRICT INSTRUCTIONS:\n1. ONLY summarize information that appears in the above emails\n2. Do NOT add external knowledge or make up events\n3. Do NOT create fake dates, companies, or announcements\n4. If an email lacks specific details, acknowledge the limitation\n5. Group similar topics from the actual emails provided\n6. Use the current date (${today}) in your digest title\n\nCreate a daily digest in this format:\n\n# AI Daily Digest - ${today}\n\n## 🚀 Major Releases\n[Only include if mentioned in the provided emails]\n\n## 🔬 Research & Breakthroughs\n[Only include if mentioned in the provided emails]\n\n## 📈 Industry News\n[Only include if mentioned in the provided emails]\n\n## 🛠️ New Tools\n[Only include if mentioned in the provided emails]\n\n## 💡 What to Watch\n[Only trends you can infer from the provided content]\n\nRules:\n- Maximum 2-3 sentences per item\n- Include source attribution (newsletter name)\n- Keep total under 400 words\n- If you don't have enough content for a section, write \"No significant updates in this category today\"\n- End with: \"Sources: [list the actual newsletter names from the emails]\"\n\nREMEMBER: Use ONLY the content from the ${sortedEmails.length} emails provided above. Do not hallucinate or add external information.`;\n\n// Log the prompt for debugging\nconsole.log('Generated prompt preview:', prompt.substring(0, 500) + '...');\nconsole.log(`Email sources included: ${sortedEmails.map(e => e.from.name).join(', ')}`);\n\n// Return the formatted prompt\nreturn [{ \n  json: { \n    prompt: prompt,\n    email_count: sortedEmails.length,\n    email_sources: sortedEmails.map(e => e.from.name),\n    date: today,\n    raw_emails: sortedEmails // Include for debugging if needed\n  } \n}]; "
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        260
+      ],
+      "id": "b270dedf-a202-4d44-9449-e85a2a1ab76f",
+      "name": "Format for AI"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gmail Email Parser for n8n Code Node - Full Gmail API Response (Simplify=OFF)\n// Handles rich Gmail API data structure with full content access\n// Extracts and cleans email content for AI summarization\n\nconst items = $input.all();\nconst processedItems = [];\n\n// INITIAL DEBUGGING - Let's see what we're working with\nconsole.log(`\\n=== FULL API RESPONSE ANALYSIS ===`);\nconsole.log(`Total input items: ${items.length}`);\nif (items.length > 0) {\n  console.log('First item structure:');\n  console.log('- Item keys:', Object.keys(items[0]));\n  if (items[0].json) {\n    console.log('- JSON keys:', Object.keys(items[0].json));\n    console.log('- Has id:', !!items[0].json.id);\n    console.log('- Has subject:', !!items[0].json.subject);\n    console.log('- Has from:', !!items[0].json.from);\n    console.log('- Has html:', !!items[0].json.html);\n    console.log('- Has text:', !!items[0].json.text);\n    console.log('- Has headers:', !!items[0].json.headers);\n    console.log('- HTML content length:', items[0].json.html?.length || 0);\n    console.log('- Text content length:', items[0].json.text?.length || 0);\n  }\n}\n\n// Enhanced utility functions for content cleaning\nconst normalizeWhitespace = (text) => {\n  if (!text) return '';\n  return text\n    .replace(/\\r\\n/g, '\\n')\n    .replace(/\\r/g, '\\n')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .replace(/[ \\t]+/g, ' ')\n    .replace(/\\u00A0/g, ' ') // Non-breaking spaces\n    .trim();\n};\n\nconst stripHTML = (html) => {\n  if (!html) return '';\n  \n  // Remove HTML tags and decode entities\n  return html\n    .replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi, '') // Remove scripts\n    .replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi, '') // Remove styles\n    .replace(/<[^>]*>/g, ' ') // Remove HTML tags\n    .replace(/&nbsp;/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#8217;/g, \"'\")\n    .replace(/&#8220;/g, '\"')\n    .replace(/&#8221;/g, '\"')\n    .replace(/&#8230;/g, '...')\n    .replace(/&[#\\w]+;/g, '') // Remove other entities\n    .replace(/\\s{2,}/g, ' ')\n    .trim();\n};\n\nconst parseDate = (dateString) => {\n  try {\n    if (!dateString) return new Date().toISOString();\n    return new Date(dateString).toISOString();\n  } catch (error) {\n    console.log('Date parse error:', error.message);\n    return new Date().toISOString();\n  }\n};\n\nconst extractSenderInfo = (fromField) => {\n  if (!fromField) return { email: '', name: '', domain: '', isNewsletter: false };\n  \n  console.log('Parsing sender from field:', JSON.stringify(fromField, null, 2));\n  \n  let email = '';\n  let name = '';\n  \n  // Handle different from field formats\n  if (typeof fromField === 'string') {\n    // Parse \"Name <email@domain.com>\" format or just \"email@domain.com\"\n    const emailMatch = fromField.match(/<([^>]+)>/) || fromField.match(/([^\\s<>]+@[^\\s<>]+)/);\n    email = emailMatch ? emailMatch[1].trim() : '';\n    \n    if (fromField.includes('<') && fromField.includes('>')) {\n      name = fromField.split('<')[0].replace(/['\"]/g, '').trim();\n    }\n  } else if (fromField.value && Array.isArray(fromField.value) && fromField.value.length > 0) {\n    // Handle parsed email object format\n    const firstSender = fromField.value[0];\n    email = firstSender.address || '';\n    name = firstSender.name || '';\n  } else if (fromField.text) {\n    // Handle text representation\n    const emailMatch = fromField.text.match(/<([^>]+)>/) || fromField.text.match(/([^\\s<>]+@[^\\s<>]+)/);\n    email = emailMatch ? emailMatch[1].trim() : '';\n    \n    if (fromField.text.includes('<') && fromField.text.includes('>')) {\n      name = fromField.text.split('<')[0].replace(/['\"]/g, '').trim();\n    }\n  }\n  \n  const domain = email.split('@')[1] || '';\n  \n  // Enhanced newsletter detection\n  const newsletterPatterns = [\n    /newsletter|digest|weekly|daily|update|news|bulletin/i,\n    /noreply|no-reply|hello|hi|info|support/i,\n    /automated|system|robot|bot/i,\n    /substack|mailchimp|constantcontact/i\n  ];\n  \n  const isNewsletter = newsletterPatterns.some(pattern => \n    pattern.test(name) || pattern.test(email) || pattern.test(domain)\n  );\n  \n  return { email, name, domain, isNewsletter };\n};\n\nconst calculateContentScore = (content, subject, sender, labelIds = []) => {\n  let score = 0;\n  \n  // Length scoring (much more generous for full content)\n  if (content.length > 5000) score += 5;\n  else if (content.length > 2000) score += 4;\n  else if (content.length > 1000) score += 3;\n  else if (content.length > 500) score += 2;\n  else if (content.length > 100) score += 1;\n  \n  // AI-related content scoring\n  const aiKeywords = /\\b(ai|artificial intelligence|machine learning|deep learning|neural|gpt|llm|openai|anthropic|chatgpt|automation|robotics|algorithm|data science|tech|innovation|model|claude|gemini)\\b/gi;\n  const aiMatches = (content + ' ' + subject).match(aiKeywords) || [];\n  score += Math.min(aiMatches.length * 0.3, 4); // Cap AI keyword bonus\n  \n  // Newsletter bonus\n  if (sender.isNewsletter) score += 1.5;\n  \n  // Subject line quality\n  if (subject && subject.length > 10) score += 1;\n  \n  // Bonus for pre-filtered newsletters (Newsletter label)\n  const hasNewsletterLabel = labelIds.some(labelId => \n    labelId.includes('Label_') || labelId.includes('Newsletter')\n  );\n  if (hasNewsletterLabel) score += 2; // Significant bonus for pre-filtered content\n  \n  return Math.round(score * 10) / 10; // Round to 1 decimal\n};\n\nconst cleanContentForAI = (content, senderDomain = '') => {\n  if (!content) return '';\n  \n  // Store original content for debugging\n  const originalLength = content.length;\n  console.log(`🧹 Cleaning content from ${senderDomain} (original: ${originalLength} chars)`);\n  \n  let cleaned = content\n    // Remove those specific invisible characters\n    .replace(/͏/g, '') // Remove invisible separator characters\n    .replace(/[\\u0300-\\u036F]/g, '') // Remove combining diacritical marks\n    .replace(/[\\u200B-\\u200D\\uFEFF]/g, '') // Zero-width characters\n    .replace(/‌/g, '') // Zero-width non-joiner\n    .replace(/\\s{2,}/g, ' '); // Multiple spaces to single space\n  \n  console.log(`🧹 After basic cleaning: ${cleaned.length} chars`);\n  \n  // Be less aggressive for Everyday AI emails\n  if (senderDomain.includes('youreverydayai.com')) {\n    console.log(`🧹 Using gentle cleaning for Everyday AI`);\n    \n    cleaned = cleaned\n      // Only remove obvious footers\n      .replace(/unsubscribe.{0,100}$/gi, '')\n      .replace(/view this email in your browser.{0,100}/gi, '')\n      \n      // Clean excessive spacing\n      .replace(/\\n\\s*\\n\\s*\\n/g, '\\n\\n')\n      .replace(/[-=_]{10,}/g, '---') // Only very long separator lines\n      .trim();\n  } else {\n    // Normal aggressive cleaning for other newsletters\n    cleaned = cleaned\n      // Remove common newsletter footers and tracking\n      .replace(/unsubscribe|privacy policy|terms of service.{0,300}$/gi, '')\n      .replace(/view this email in your browser.{0,200}/gi, '')\n      .replace(/forward to a friend.{0,200}/gi, '')\n      .replace(/manage your preferences.{0,200}/gi, '')\n      .replace(/sent to .+ because .+/gi, '')\n      .replace(/powered by substack.{0,100}/gi, '')\n      \n      // Clean tracking URLs\n      .replace(/https?:\\/\\/[^\\s]+utm_[^\\s]+/g, '[tracking-link]')\n      .replace(/https?:\\/\\/[^\\s]+\\?[^\\s]*ref=[^\\s]*/g, '[ref-link]')\n      .replace(/https?:\\/\\/substackcdn\\.com\\/[^\\s]+/g, '[image]')\n      \n      // Remove template variables\n      .replace(/\\*\\|[^|]*\\|\\*/g, '') // MailChimp\n      .replace(/{{[^}]*}}/g, '') // Generic templates\n      .replace(/%[A-Z_]+%/g, '') // Another template format\n      \n      // Clean excessive spacing and characters\n      .replace(/\\n\\s*\\n\\s*\\n/g, '\\n\\n')\n      .replace(/[-=_]{5,}/g, '---') // Long separator lines\n      .replace(/\\s*\\|\\s*/g, ' | ') // Clean up table separators\n      \n      // Remove email signature patterns\n      .replace(/--\\s*\\n[\\s\\S]*$/g, '') // Email signatures starting with --\n      .replace(/best regards?.{0,200}$/gi, '')\n      .replace(/thanks?.{0,100}$/gi, '')\n      \n      .trim();\n  }\n  \n  console.log(`🧹 Final cleaned content: ${cleaned.length} chars (reduced by ${originalLength - cleaned.length})`);\n  \n  return cleaned;\n};\n\n// Main processing logic\nconsole.log(`Starting processing of ${items.length} email items with full API data`);\n\nitems.forEach((item, index) => {\n  try {\n    const message = item.json;\n    \n    // DEBUGGING for full Gmail API format\n    console.log(`\\n=== Processing Full Email ${index + 1} ===`);\n    console.log('Message keys:', Object.keys(message));\n    \n    // Extract data from full Gmail API response\n    const id = message.id || `unknown_${index}`;\n    const threadId = message.threadId || message.id || '';\n    const labelIds = message.labelIds || [];\n    \n    // Extract core email fields\n    const subject = message.subject || 'No Subject';\n    const date = parseDate(message.date);\n    \n    console.log('Extracted metadata:', {\n      subject: subject.substring(0, 50),\n      date: date,\n      labelIds: labelIds,\n      hasHTML: !!message.html,\n      hasText: !!message.text,\n      htmlLength: message.html?.length || 0,\n      textLength: message.text?.length || 0\n    });\n    \n    const sender = extractSenderInfo(message.from);\n    \n    // Content extraction: prioritize text, fallback to HTML\n    let content = '';\n    let contentType = 'none';\n    \n    if (message.text && message.text.trim().length > 50) {\n      content = normalizeWhitespace(message.text);\n      contentType = 'text';\n    } else if (message.html) {\n      content = stripHTML(message.html);\n      content = normalizeWhitespace(content);\n      contentType = 'html-stripped';\n    }\n    \n    // Clean content for AI processing\n    content = cleanContentForAI(content, sender.domain);\n    \n    const contentScore = calculateContentScore(content, subject, sender, labelIds);\n    \n    const processedItem = {\n      id,\n      threadId,\n      subject,\n      from: {\n        email: sender.email,\n        name: sender.name,\n        domain: sender.domain,\n        full: message.from?.text || JSON.stringify(message.from) || ''\n      },\n      to: message.to?.text || JSON.stringify(message.to) || '',\n      date: date,\n      content: content,\n      contentLength: content.length,\n      contentType: contentType,\n      metadata: {\n        contentScore,\n        hasAttachments: false, // Could be enhanced to detect attachments\n        isMultipart: !!message.html && !!message.text,\n        isNewsletter: sender.isNewsletter,\n        labelIds: labelIds,\n        processingMethod: 'full-gmail-api',\n        sizeEstimate: message.sizeEstimate || 0,\n        messageId: message.messageId || '',\n        references: message.references || '',\n        inReplyTo: message.inReplyTo || '',\n        originalTextLength: message.text?.length || 0,\n        originalHtmlLength: message.html?.length || 0,\n        headers: Object.keys(message.headers || {}).length\n      }\n    };\n    \n    console.log(`Processed: \"${subject.substring(0, 40)}\" from ${sender.domain} (${content.length} chars, score: ${contentScore}, type: ${contentType})`);\n    \n    // More lenient filtering since we have full content\n    if (processedItem.contentLength > 20 && contentScore >= 0.5) {\n      processedItems.push({ json: processedItem });\n    } else {\n      console.log('Filtered out due to low content/score');\n    }\n    \n  } catch (error) {\n    console.error(`Error processing email ${index}:`, error);\n    \n    // Enhanced fallback item\n    const fallbackItem = {\n      id: item.json?.id || `error_${index}`,\n      threadId: item.json?.threadId || '',\n      subject: 'Parse Error',\n      from: { email: 'unknown', name: '', domain: '', full: '' },\n      to: '',\n      date: new Date().toISOString(),\n      content: item.json?.text || item.json?.html ? stripHTML(item.json.html || '') : 'Failed to parse email content',\n      contentLength: (item.json?.text || item.json?.html || '').length,\n      contentType: 'error',\n      metadata: {\n        error: error.message,\n        contentScore: 0,\n        hasAttachments: false,\n        isMultipart: false,\n        isNewsletter: false,\n        labelIds: item.json?.labelIds || [],\n        processingMethod: 'error'\n      }\n    };\n    \n    processedItems.push({ json: fallbackItem });\n  }\n});\n\n// Enhanced summary logging\nconsole.log(`\\n=== Processing Summary ===`);\nconsole.log(`Input: ${items.length} emails`);\nconsole.log(`Output: ${processedItems.length} processed emails`);\nconsole.log(`Success rate: ${((processedItems.length / items.length) * 100).toFixed(1)}%`);\n\nprocessedItems.forEach((item, index) => {\n  const { subject, contentLength, contentType, metadata } = item.json;\n  console.log(`${index + 1}. \"${subject.substring(0, 40)}\" - ${contentLength} chars (${contentType}) [Score: ${metadata.contentScore}]`);\n});\n\nconsole.log(`\\n=== Content Type Distribution ===`);\nconst contentTypes = processedItems.reduce((acc, item) => {\n  const type = item.json.contentType;\n  acc[type] = (acc[type] || 0) + 1;\n  return acc;\n}, {});\nconsole.log(contentTypes);\n\nreturn processedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        260
+      ],
+      "id": "e07831db-0a5e-4f65-8460-2ed11791d13d",
+      "name": "Parse Email"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "Label_404369999337271072"
+          ],
+          "readStatus": "unread",
+          "receivedAfter": "2025-06-01T00:00:00",
+          "sender": "dwarkesh+blog@substack.com OR bensbites@substack.com OR natesnewsletter@substack.com OR info@youreverydayai.com OR thebatch@deeplearning.ai"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "a48153be-c8ad-4819-b2a5-1007ac0f7a67",
+      "name": "Get Messages",
+      "webhookId": "c117018b-9372-49c7-a370-700947a794a0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wIwoLR7JmP15jcuU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        440,
+        0
+      ],
+      "id": "15dd617f-91b1-4c33-8091-b62abe91e2b3",
+      "name": "Mark Read",
+      "webhookId": "cb82e471-6094-46a7-90fb-96b19ce4cb6b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wIwoLR7JmP15jcuU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format OpenAI Summary to HTML for Email\n// This code should be placed in the Code node after the OpenAI node\n\n// Get the OpenAI response\nconst openaiResponse = $input.first().json;\n\nconsole.log('Full OpenAI Response Structure:', JSON.stringify(openaiResponse, null, 2));\n\n// Extract the markdown content from OpenAI response\n// Handle different possible response structures\nlet markdownContent = '';\n\n// Check for the actual structure we see in the email\nif (openaiResponse.message && openaiResponse.message.content) {\n  markdownContent = openaiResponse.message.content;\n} else if (openaiResponse.choices && openaiResponse.choices[0] && openaiResponse.choices[0].message) {\n  markdownContent = openaiResponse.choices[0].message.content;\n} else if (openaiResponse.response) {\n  markdownContent = openaiResponse.response;\n} else if (openaiResponse.text) {\n  markdownContent = openaiResponse.text;\n} else if (openaiResponse.content) {\n  markdownContent = openaiResponse.content;\n} else if (typeof openaiResponse === 'string') {\n  markdownContent = openaiResponse;\n} else {\n  // Fallback - look for any text content\n  console.log('No recognized content structure, using fallback');\n  markdownContent = JSON.stringify(openaiResponse, null, 2);\n}\n\nconsole.log('Extracted markdown content length:', markdownContent.length);\nconsole.log('First 200 chars:', markdownContent.substring(0, 200) + '...');\n\n// Enhanced Markdown to HTML conversion\nfunction convertMarkdownToHTML(markdown) {\n  if (!markdown) return '<p>No content available</p>';\n  \n  let html = markdown\n    // Convert headers (must be done in order from largest to smallest)\n    .replace(/^### (.*$)/gmi, '<h3>$1</h3>')\n    .replace(/^## (.*$)/gmi, '<h2>$1</h2>') \n    .replace(/^# (.*$)/gmi, '<h1>$1</h1>')\n    \n    // Convert emoji sections to styled headers\n    .replace(/^(🚀.*$)/gmi, '<h2 class=\"section-header rocket\">$1</h2>')\n    .replace(/^(🔬.*$)/gmi, '<h2 class=\"section-header research\">$1</h2>')\n    .replace(/^(📈.*$)/gmi, '<h2 class=\"section-header industry\">$1</h2>')\n    .replace(/^(🛠️.*$)/gmi, '<h2 class=\"section-header tools\">$1</h2>')\n    .replace(/^(💡.*$)/gmi, '<h2 class=\"section-header insights\">$1</h2>')\n    \n    // Convert unordered lists\n    .replace(/^- (.*$)/gmi, '<li>$1</li>')\n    \n    // Convert bold text\n    .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')\n    \n    // Convert italic text\n    .replace(/\\*(.*?)\\*/g, '<em>$1</em>')\n    \n    // Convert inline code\n    .replace(/`(.*?)`/g, '<code>$1</code>')\n    \n    // Handle line breaks and paragraphs\n    .replace(/\\n\\n+/g, '</p><p>')\n    .replace(/\\n/g, '<br>');\n    \n  // Wrap list items in ul tags\n  html = html.replace(/(<li>.*<\\/li>)/s, (match) => {\n    // Check if already wrapped\n    if (html.includes('<ul>')) return match;\n    return '<ul>' + match.replace(/<\\/li><li>/g, '</li><li>') + '</ul>';\n  });\n  \n  // Wrap everything in paragraph tags if not already wrapped\n  if (!html.startsWith('<h1>') && !html.startsWith('<h2>') && !html.startsWith('<div>')) {\n    html = '<p>' + html + '</p>';\n  }\n  \n  return html;\n}\n\n// Convert the markdown to HTML\nconst htmlBody = convertMarkdownToHTML(markdownContent);\n\n// Get current date for the subject\nconst currentDate = new Date().toLocaleDateString('en-US', { \n  weekday: 'long',\n  year: 'numeric', \n  month: 'long', \n  day: 'numeric' \n});\n\n// Create the complete HTML email with modern styling\nconst completeHTML = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>AI Daily Digest</title>\n    <style>\n        body {\n            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;\n            line-height: 1.6;\n            color: #333;\n            max-width: 600px;\n            margin: 0 auto;\n            padding: 20px;\n            background-color: #f8f9fa;\n        }\n        \n        .email-container {\n            background-color: white;\n            border-radius: 8px;\n            padding: 30px;\n            box-shadow: 0 2px 10px rgba(0,0,0,0.1);\n        }\n        \n        h1 {\n            color: #2c3e50;\n            font-size: 24px;\n            margin-bottom: 10px;\n            border-bottom: 3px solid #3498db;\n            padding-bottom: 10px;\n        }\n        \n        h2 {\n            color: #34495e;\n            font-size: 18px;\n            margin: 25px 0 12px 0;\n            padding-left: 8px;\n            border-left: 4px solid #3498db;\n        }\n        \n        h2.section-header {\n            background: linear-gradient(90deg, #f8f9fa 0%, transparent 100%);\n            padding: 12px;\n            border-radius: 6px;\n            border-left: 4px solid #3498db;\n            margin: 20px 0 15px 0;\n        }\n        \n        h2.rocket { border-left-color: #e74c3c; }\n        h2.research { border-left-color: #9b59b6; }\n        h2.industry { border-left-color: #27ae60; }\n        h2.tools { border-left-color: #f39c12; }\n        h2.insights { border-left-color: #1abc9c; }\n        \n        h3 {\n            color: #7f8c8d;\n            font-size: 16px;\n            margin: 15px 0 8px 0;\n        }\n        \n        p {\n            margin: 12px 0;\n            line-height: 1.7;\n        }\n        \n        ul {\n            padding-left: 20px;\n            margin: 15px 0;\n        }\n        \n        li {\n            margin-bottom: 8px;\n            line-height: 1.6;\n        }\n        \n        strong {\n            color: #2c3e50;\n            font-weight: 600;\n        }\n        \n        em {\n            color: #7f8c8d;\n            font-style: italic;\n        }\n        \n        code {\n            background-color: #f1f2f6;\n            padding: 2px 6px;\n            border-radius: 3px;\n            font-family: 'Courier New', monospace;\n            font-size: 0.9em;\n            color: #2f3542;\n        }\n        \n        .header-date {\n            color: #7f8c8d;\n            font-size: 14px;\n            margin-bottom: 20px;\n            text-align: center;\n            font-style: italic;\n        }\n        \n        .footer {\n            margin-top: 30px;\n            padding-top: 20px;\n            border-top: 1px solid #ecf0f1;\n            font-size: 12px;\n            color: #95a5a6;\n            text-align: center;\n        }\n        \n        .sources {\n            background-color: #f8f9fa;\n            padding: 15px;\n            border-radius: 6px;\n            margin-top: 25px;\n            border-left: 4px solid #3498db;\n        }\n        \n        .sources strong {\n            color: #2c3e50;\n        }\n        \n        @media (max-width: 600px) {\n            body {\n                padding: 10px;\n            }\n            \n            .email-container {\n                padding: 20px;\n            }\n            \n            h1 {\n                font-size: 20px;\n            }\n            \n            h2 {\n                font-size: 16px;\n            }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"email-container\">\n        <div class=\"header-date\">${currentDate}</div>\n        ${htmlBody}\n        \n        <div class=\"sources\">\n            <strong>Sources:</strong> Based on emails from your AI newsletter subscriptions\n        </div>\n        \n        <div class=\"footer\">\n            Generated by your n8n AI Newsletter Digest workflow<br>\n            <em>Automated summary • ${new Date().toLocaleString()}</em>\n        </div>\n    </div>\n</body>\n</html>`;\n\n// Log for debugging\nconsole.log('Generated HTML email length:', completeHTML.length);\nconsole.log('Subject will be:', `AI Daily Digest – ${currentDate}`);\n\n// Return the formatted data for the email node\nreturn [{\n    json: {\n        subject: `AI Daily Digest – ${currentDate}`,\n        htmlBody: completeHTML,\n        textBody: markdownContent, // Also provide plain text version\n        originalMarkdown: markdownContent,\n        generatedAt: new Date().toISOString(),\n        contentLength: markdownContent.length\n    }\n}]; "
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        260
+      ],
+      "id": "fd2cb657-ca22-4b61-aa38-2ffdd1f937a4",
+      "name": "Format Email"
+    },
+    {
+      "parameters": {
+        "sendTo": "tyler.dodd@crowe.com",
+        "subject": "={{$json.subject}}",
+        "message": "={{$json.htmlBody}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1020,
+        160
+      ],
+      "id": "27a68299-9ae4-4c36-90c7-e03c630aa428",
+      "name": "Send Email",
+      "webhookId": "88b7955d-d086-4359-af46-3d345a59135c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wIwoLR7JmP15jcuU",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format for AI": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Email": {
+      "main": [
+        [
+          {
+            "node": "Format for AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Messages": {
+      "main": [
+        [
+          {
+            "node": "Mark Read",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Parse Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Format Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8503950e-3b0b-4b9a-9cd8-736e27bacc49",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "88a01ddd60c0c354a977d9d2e911562252da2d2a8c3af3052d038d09a1bde3cd"
+  },
+  "id": "nAV4EHG9HTvrAcLa",
+  "tags": []
+}
