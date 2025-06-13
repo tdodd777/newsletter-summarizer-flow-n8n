@@ -1,0 +1,188 @@
+Received: from [REDACTED_ID]
+	named unknown
+	by gmailapi.google.com
+	with HTTPREST;
+	Fri, 13 Jun 2025 06:14:25 -0700
+Content-Type: text/html; charset=utf-8
+To: [REDACTED_EMAIL]
+Subject: AI Daily Digest – Friday, June 13, 2025
+Message-Id: <[REDACTED_MESSAGE_ID]>
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 13 Jun 2025 06:14:25 -0700
+MIME-Version: 1.0
+From: [REDACTED_EMAIL]
+
+
+			<!DOCTYPE html>
+<html lang=3D"en">
+<head>
+    <meta charset=3D"UTF-8">
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width, =
+initial-scale=3D1.0">
+    <title>AI Daily Digest</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, =
+'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+       =20
+        .email-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+       =20
+        h1 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 10px;
+            border-bottom: 3px solid =
+#3498db;
+            padding-bottom: 10px;
+        }
+       =20
+        h2 {
+            color: #34495e;
+            font-size: 18px;
+            margin: 25px 0 12px 0;
+            padding-left: 8px;
+            border-left: 4px solid #3498db;
+        }
+       =20
+        h2.section-header {
+            background: linear-gradient(90deg, =
+#f8f9fa 0%, transparent 100%);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+            margin: 20px 0 15px 0;
+        }
+       =20
+        h2.rocket { border-left-color: #e74c3c; }
+        h2.research { =
+border-left-color: #9b59b6; }
+        h2.industry { border-left-color: =
+#27ae60; }
+        h2.tools { border-left-color: #f39c12; }
+        h2.insights { border-left-color: #1abc9c; }
+       =20
+        h3 {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin: 15px 0 8px 0;
+        }
+       =20
+        p {
+            margin: 12px 0;
+            line-height: 1.7;
+        }
+       =20
+        ul {
+            padding-left: 20px;
+            margin: 15px 0;
+        }
+       =20
+        li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+       =20
+        strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+       =20
+        em {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+       =20
+        code {
+            background-color: #f1f2f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0=
+.9em;
+            color: #2f3542;
+        }
+       =20
+        .header-date {
+            color: #7f8c8d;
+            font-size: =
+14px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-style: italic;
+        }
+       =20
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+            font-size: 12px;
+            color: #95a5a6;
+            text-align: center;
+        }
+       =20
+        .sources {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 25px;
+            border-left: 4px solid #3498db;
+        }
+       =20
+        .sources strong {
+            color: #2c3e50;
+        }
+       =20
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+           =20
+            .email-container {
+                padding: 20px;
+            }
+           =20
+            h1 {
+                font-size: 20px;
+            }
+           =20
+            h2 {
+                font-size: =
+16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class=3D"email-container">
+        <div class=3D"header-date">Friday, June 13, 2025</div>
+        <h1>AI Daily Digest - Friday, June 13, 2025</h1></p><p><h2>=F0=9F=9A=80 Major Releases</h2></p><p><ul><li>OpenAI rolled out o3 Pro, a reasoning-focused upgrade now available for ChatGPT Pro, Teams, and API users. Despite some latency and missing features, it promises stronger performance in science, math, and business tasks. (Everyday AI, Nate's Substack)</li></p><p><li>ChatGPT Projects received a major upgrade with voice mode, deeper web-integrated research, mobile file uploads, model switching, and an improved memory system. (Everyday AI)</li></p><p><li>ByteDance unveiled SeedDance, a new AI video generation model they claim outperforms Google's Veo 3. (Ben's Bites)</li></p><p><li>Microsoft launched Copilot Vision on Windows, enabling AI-assisted screen sharing and real-time guidance without needing a Pro subscription. (Everyday AI)</li></p><p><h2>=F0=9F=94=AC Research & Breakthroughs</h2></p><p><li>Google DeepMind introduced a new AI model in Weather Lab that accurately tracks and predicts hurricanes up to 15 days in advance, outperforming traditional weather models. (Everyday AI)</li></p><p><li>AI research trends are shifting with increased reliance on synthetic data and training, as access to "natural" data becomes more restricted. The emerging techniques are already part of many current model training pipelines. (Nate's Substack)</li></p><p><h2>=F0=9F=93=88 Industry News</h2></p><p><li>Sam Altman confirmed an 80% price cut for OpenAI's o3, making it cheaper than GPT-4o via API. (Ben's Bites)</li></p><p><li>Mattel is partnering with OpenAI to launch AI-powered toys later this year and is integrating ChatGPT Enterprise tools company-wide. (Everyday AI)</li></p><p><li>Meta is building a superintelligence team and is reportedly investing $15B to acquire 49% of Scale AI, bringing Scale's CEO onboard as an AI executive. (Ben's Bites)</li></p><p><li>The U.S. Government will launch AI.gov on July 4, featuring a federal AI chatbot and access to top models. (Everyday AI)</li></p><p><li>Meta is suing Joy Timeline HK for serving "nudify" AI-generated content and is collaborating with other tech giants to curb such ads. (Everyday AI)</li></p><p><h2>=F0=9F=9B=A0=EF=B8=8F New Tools</h2></p><p><li>Google's Gemini app now embeds Veo 3, offering 8-second native audio video generation. (Everyday AI)</li></p><p><li>Amplitude AI agents, Scouts (web monitors), and Windsurf's new debugging browser and planner mode add fresh tools for product teams and developers. (Ben's Bites)</li></p><p><li>Sider (for deep research summaries), Autodraft (AI 4K video animator), and Superlines (AI SEO tool) were spotlighted. (Everyday AI)</li></p><p><h2>=F0=9F=92=A1 What to Watch</h2></p><p><li>Dashboards like Nate's customizable AI model evaluator underscore fatigue over frequent model releases—12+ so far this year—and growing need for tailored performance tracking across real-world tasks. (Nate's Substack)</li></p><p><li>AI agent infrastructure is shifting toward micro-agentic systems and real-time reliability evaluation, moving beyond traditional software QA methods. (Everyday AI)</li></ul></p><p>Sources: Everyday AI, Ben's Bites, Nate's Substack
+       
+        <div class=3D"sources">
+            <strong>Sources:</strong> Based on emails from your AI newsletter subscriptions
+        </div>
+       
+        <div class=3D"footer">
+            Generated by your n8n AI Newsletter Digest workflow<br>
+            <em>Automated summary • [REDACTED_TIMESTAMP]</em>
+        </div>
+    </div>
+</body>
+</html>
+			<br>
+			<br>
+			---
+			<br>
+			<em>This email was sent automatically with <a href=3D"https://n8n.io/" target=3D"_blank">n8n</a></em>
+		=09
